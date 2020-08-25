@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1231
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WfGaming.NET", "WfGaming.NET\WfGaming.NET.csproj", "{EF837A66-930C-4E89-94E6-D8B1A96F1BD3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EF837A66-930C-4E89-94E6-D8B1A96F1BD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF837A66-930C-4E89-94E6-D8B1A96F1BD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF837A66-930C-4E89-94E6-D8B1A96F1BD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF837A66-930C-4E89-94E6-D8B1A96F1BD3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4593E1E1-3608-4BD6-9250-70674DA7FFBC}
+	EndGlobalSection
+EndGlobal
