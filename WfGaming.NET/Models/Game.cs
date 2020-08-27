@@ -9,10 +9,14 @@ namespace WfGaming.Models
 {
     class Game
     {
+        public uint Build { get; private set; }
+        public string Version { get; private set; }
+
         DateTime LastBattleStartTime = DateTime.Now;
         DateTime LastBattleEndTime = DateTime.Now;
 
-        string ModDirectory { get; set; } = string.Empty;
+        public readonly string ModName = "AutoMod";
+        public string ModDirectory { get; set; } = string.Empty;
         private string BattleStartLog { get; } = "battle_start.log";
         private string BattleEndLog { get; } = "battle_end.log";
 
@@ -20,7 +24,7 @@ namespace WfGaming.Models
         {
             get
             {
-                string path = ModDirectory + $@"\{BattleStartLog}";
+                string path = $@"{ModDirectory}\{BattleStartLog}";
                 DateTime fileLastWriteTime = File.GetLastWriteTime(path);
                 if (fileLastWriteTime > LastBattleStartTime)
                 {
@@ -35,7 +39,7 @@ namespace WfGaming.Models
         {
             get
             {
-                string path = ModDirectory + $@"\{BattleEndLog}";
+                string path = $@"{ModDirectory}\{BattleEndLog}";
                 DateTime fileLastWriteTime = File.GetLastWriteTime(path);
                 if (fileLastWriteTime > LastBattleEndTime)
                 {
@@ -58,7 +62,7 @@ namespace WfGaming.Models
             foreach (var drive in drives)
             {
                 Console.WriteLine($"Drive: {drive.Name}, {drive.DriveType}");
-                string path = drive.Name + @"Games\World_of_Warships_NA";
+                string path = $@"{drive.Name}Games\World_of_Warships_NA";
                 if (Directory.Exists(path))
                 {
                     clientPath = path;
@@ -79,6 +83,15 @@ namespace WfGaming.Models
             {
                 Console.WriteLine($"Build: {buildDirectory}");
                 buildPath = buildDirectory;
+
+                try
+                {
+                    Build = uint.Parse(buildDirectory.Split('\\').Last());
+                }
+                catch (FormatException e)
+                {
+                    Console.Error.WriteLine(e.ToString());
+                }
             }
 
             string versionPath = string.Empty;
@@ -87,11 +100,13 @@ namespace WfGaming.Models
             {
                 Console.WriteLine($"Version: {versionDirectory}");
                 versionPath = versionDirectory;
+
+                Version = versionDirectory.Split('\\').Last();
             }
 
-            ModDirectory = versionPath + @"\PnFMods";
+            ModDirectory = $@"{versionPath}\PnFMods\{ModName}";
 
-            string logPath = ModDirectory + @"\AutoMod\battle_start.txt";
+            string logPath = $@"{ModDirectory}\battle_start.txt";
             Console.WriteLine($"Log: {logPath}");
             DateTime datetime = File.GetLastWriteTime(logPath);
             Console.WriteLine($"DateTime: {datetime}");

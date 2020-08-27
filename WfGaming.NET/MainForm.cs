@@ -1,20 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using WfGaming.Utils;
-using System.Threading;
+using WfGaming.Models;
+using System.ComponentModel;
 
 namespace WfGaming
 {
     public partial class MainForm : Form
     {
+        private Game game;
+        private DataSource dataSource;
+
         public MainForm()
         {
             InitializeComponent();
@@ -38,16 +37,9 @@ namespace WfGaming
             return bitmap;
         }
 
-        private delegate IntPtr LowLevelKeyboardProc(int nCode, int wParam, ref IntPtr lParam);
-
-        [DllImport("user32.dll")]
-        static extern IntPtr SetWindowsHookExA(int idHook, LowLevelKeyboardProc lpfn, IntPtr hmod, uint dwThreadId);
-
-        const int WH_KEYBOARD_LL = 13;
-
         private void MainForm_Load(object sender, EventArgs e)
         {
-            /*
+#if !DEBUG
             if (ProcessManager.IsGameProcessRunning())
             {
                 string message = "World of Warships를 종료 후 다시 실행해 주세요.";
@@ -56,18 +48,76 @@ namespace WfGaming
                 DialogResult _ = MessageBox.Show(message, caption, buttons);
                 this.Close();
             }
-            */
+#endif
+            game = new Game();
+            Console.WriteLine($"Build: {game.Build}, Version: {game.Version}");
 
-            KeyHook keyHook = new KeyHook();
-            KeyHook.InstallHook();
-            new Thread(new ThreadStart(keyHook.DigestQueue)).Start();
+            BuildLabel.Text = game.Build.ToString();
+            VersionLabel.Text = game.Version;
+
+            dataSource = new DataSource(game);
+
+            //KeyHook keyHook = new KeyHook();
+            //KeyHook.InstallHook();
+            //new Thread(new ThreadStart(keyHook.DigestQueue)).Start();
         }
 
         ~MainForm()
         {
             Console.WriteLine("MainForm.Destructor");
 
-            KeyHook.UninstallHook();
+            //KeyHook.UninstallHook();
+        }
+
+        private Thread backgroundThread;
+
+        private void WorkerButton_Click(object sender, EventArgs e)
+        {
+            backgroundThread = new Thread(dataSource.Run);
+            backgroundThread.IsBackground = true;
+            backgroundThread.Start();
+            //dataSource.Run();
+
+            //backgroundThread = new Thread(Job);
+            //backgroundThread.IsBackground = true;
+            //backgroundThread.Start();
+
+            WorkerButton.Enabled = false;
+        }
+
+        private void Job()
+        {
+            while (true)
+            {
+                while (!game.IsBattleStarted)
+                {
+                    Thread.Sleep(1000);
+                }
+
+                Console.WriteLine("-----------------------------------------");
+                Console.WriteLine($"[{DateTime.Now}] -*- Battle started! -*-");
+                Console.WriteLine("-----------------------------------------");
+
+                Console.WriteLine($"[{Thread.CurrentThread}] [{DateTime.Now}] Background thread is running..");
+                try
+                {
+                    Thread.Sleep(1000);
+                }
+                catch (System.Threading.ThreadInterruptedException e)
+                {
+                    break;
+                }
+            }
+
+            Console.WriteLine("Background thread exterminated!");
+        }
+
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            backgroundThread.Interrupt();
+            backgroundThread.Join();
+
+            WorkerButton.Enabled = true;
         }
     }
 }
