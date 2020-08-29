@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Threading;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -13,6 +14,8 @@ namespace WfGaming
     {
         private Game game;
         private DataSource dataSource;
+        private KeyHook keyHook;
+        private Thread keyHookThread;
 
         public MainForm()
         {
@@ -49,6 +52,7 @@ namespace WfGaming
                 this.Close();
             }
 #endif
+
             game = new Game();
             Console.WriteLine($"Build: {game.Build}, Version: {game.Version}");
 
@@ -56,68 +60,223 @@ namespace WfGaming
             VersionLabel.Text = game.Version;
 
             dataSource = new DataSource(game);
+            keyHook = new KeyHook();
+            keyHook.InstallHook();
 
-            //KeyHook keyHook = new KeyHook();
-            //KeyHook.InstallHook();
-            //new Thread(new ThreadStart(keyHook.DigestQueue)).Start();
+            keyHookThread = new Thread(new ThreadStart(keyHook.DigestQueue));
+            keyHookThread.IsBackground = true;
+            keyHookThread.Start();
         }
 
         ~MainForm()
         {
             Console.WriteLine("MainForm.Destructor");
 
-            //KeyHook.UninstallHook();
+            keyHook.UninstallHook();
         }
 
         private Thread backgroundThread;
+        private Thread jobThread;
 
         private void WorkerButton_Click(object sender, EventArgs e)
         {
             backgroundThread = new Thread(dataSource.Run);
             backgroundThread.IsBackground = true;
             backgroundThread.Start();
-            //dataSource.Run();
 
-            //backgroundThread = new Thread(Job);
-            //backgroundThread.IsBackground = true;
-            //backgroundThread.Start();
+            jobThread = new Thread(Job);
+            jobThread.IsBackground = true;
+            jobThread.Start();
 
             WorkerButton.Enabled = false;
         }
 
         private void Job()
         {
+            // System.Threading.ThreadInterruptedException
             while (true)
             {
                 while (!game.IsBattleStarted)
                 {
-                    Thread.Sleep(1000);
+                    try
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    catch (System.Threading.ThreadInterruptedException e)
+                    {
+                        goto Endpoint;
+                    }
                 }
 
                 Console.WriteLine("-----------------------------------------");
                 Console.WriteLine($"[{DateTime.Now}] -*- Battle started! -*-");
                 Console.WriteLine("-----------------------------------------");
 
-                Console.WriteLine($"[{Thread.CurrentThread}] [{DateTime.Now}] Background thread is running..");
-                try
+                while (!dataSource.Enemy.IsVisible)
                 {
-                    Thread.Sleep(1000);
+                    try
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    catch (System.Threading.ThreadInterruptedException e)
+                    {
+                        goto Endpoint;
+                    }
                 }
-                catch (System.Threading.ThreadInterruptedException e)
-                {
-                    break;
-                }
-            }
 
+                Console.WriteLine("-----------------------------------------");
+                Console.WriteLine($"[{DateTime.Now}] -*- Enemy detected! -*-");
+                Console.WriteLine("-----------------------------------------");
+
+                long battleId = Time.GetTimestamp();
+                string path = $@"C:\Users\{Environment.UserName}\Desktop\WfGaming";
+                if (!System.IO.Directory.Exists(path))
+                {
+                    System.IO.Directory.CreateDirectory(path);
+                }
+
+                string dirName = path = $@"{path}\{battleId}";
+                if (!System.IO.Directory.Exists(dirName))
+                {
+                    System.IO.Directory.CreateDirectory(dirName);
+                }
+
+                string[] headers = {
+                    "image", "health", "max_health", "yaw", "speed",
+                    "visible", "ship_visible",
+                    "health2", "max_health2", "yaw2", "speed2",
+                    "visible2", "ship_visible2",
+                    "forwarding", "turning", "firing", "x", "y",
+                    "\n"
+                };
+
+                path = $@"{dirName}\meta.csv";
+
+                System.IO.File.WriteAllText(path, string.Join(",", headers));
+
+                while (!game.IsBattleEnded)
+                {
+                    long timestamp = Time.GetTimestamp();
+                    Bitmap frame = GetScreenCapture();
+                    frame.Save($@"{dirName}\{timestamp}.jpg", ImageFormat.Jpeg);
+
+                    string playerCSV = dataSource.GetPlayerCSV();
+                    string enemyCSV = dataSource.GetEnemyCSV();
+
+                    int forwarding = 0;
+                    int turning = 0;
+                    int firing = 0;
+                    char forwardingKey = keyHook.ForwardKey;
+                    char turningKey = keyHook.TurnKey;
+                    char firingKey = keyHook.FireKey;
+
+                    if (forwardingKey == 'S')
+                    {
+                        forwarding = -1;
+                    }
+                    else if (forwardingKey == 'W')
+                    {
+                        forwarding = 1;
+                    }
+
+                    if (turningKey == 'Q')
+                    {
+                        turning = -1;
+                    }
+                    else if (turningKey == 'E')
+                    {
+                        turning = 1;
+                    }
+
+                    if (firingKey == ' ')
+                    {
+                        firing = 1;
+                    }
+
+                    Mouse mouse = dataSource.Mouse;
+
+                    string actions = $"{forwarding},{turning},{firing},{mouse.X},{mouse.Y}";
+
+                    string data = $"{timestamp}.jpg,{playerCSV},{enemyCSV},{actions}";
+
+                    using (var file = System.IO.File.AppendText(path))
+                    {
+                        file.WriteLine(data);
+                    }
+
+                    try
+                    {
+                        Thread.Sleep(1000);
+                    }
+                    catch (System.Threading.ThreadInterruptedException e)
+                    {
+                        goto Endpoint;
+                    }
+                }
+
+                Console.WriteLine("-----------------------------------------");
+                Console.WriteLine($"[{DateTime.Now}] -*- Battle's ended! -*-");
+                Console.WriteLine("-----------------------------------------");
+
+                dataSource.Reset();
+            }
+            
+        Endpoint:
             Console.WriteLine("Background thread exterminated!");
+        }
+
+        private void ShowMessageBox(string message, string caption = "WfGaming.NET")
+        {
+            MessageBoxButtons buttons = MessageBoxButtons.OK;
+            DialogResult _ = MessageBox.Show(message, caption, buttons);
         }
 
         private void CancelButton_Click(object sender, EventArgs e)
         {
-            backgroundThread.Interrupt();
-            backgroundThread.Join();
+            backgroundThread?.Interrupt();
+            jobThread?.Interrupt();
+
+            backgroundThread?.Join();
+            jobThread?.Join();
+
+            backgroundThread = null;
+            jobThread = null;
 
             WorkerButton.Enabled = true;
+        }
+
+        private void ModSelectButton_Click(object sender, EventArgs e)
+        {
+            DialogResult result = ModFileOpenDialog.ShowDialog();
+            if (result == DialogResult.OK)
+            {
+                string fileName = ModFileOpenDialog.FileName;
+
+                if (!fileName.EndsWith(".py"))
+                {
+                    ShowMessageBox("Python 파일만 지원됩니다. (*.py)");
+                    return;
+                }
+
+                ModFilePathTextBox.Text = fileName;
+            }
+        }
+
+        private void ModInstallButton_Click(object sender, EventArgs e)
+        {
+            // TODO: Install Mod
+            string scriptPath = ModFilePathTextBox.Text;
+            Console.WriteLine($"Mod Script: {scriptPath}");
+
+            if (scriptPath.Equals(string.Empty))
+            {
+                ShowMessageBox("경로를 설정해 주세요.");
+                return;
+            }
+
+            game.InstallMod(scriptPath);
+
+            ShowMessageBox("모드 설치 완료.");
         }
     }
 }

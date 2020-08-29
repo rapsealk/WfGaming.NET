@@ -32,6 +32,16 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'ReleaseDeploy|AnyCPU'">
+    <OutputPath>bin\ReleaseDeploy\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
@@ -75,7 +85,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataSource.cs" />
-    <Compile Include="Models\Enemy.cs" />
+    <Compile Include="Models\Mouse.cs" />
+    <Compile Include="Models\Player.cs" />
     <Compile Include="Models\Game.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -90,6 +101,7 @@
     <Compile Include="Models\ShellInfo.cs" />
     <Compile Include="Utils\KeyHook.cs" />
     <Compile Include="Utils\ProcessManager.cs" />
+    <Compile Include="Utils\Time.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -103,6 +115,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="Scripts\Main.py" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

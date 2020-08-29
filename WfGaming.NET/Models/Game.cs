@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace WfGaming.Models
@@ -16,6 +13,7 @@ namespace WfGaming.Models
         DateTime LastBattleEndTime = DateTime.Now;
 
         public readonly string ModName = "AutoMod";
+        public string ModRootDirectory { get; set; } = string.Empty;
         public string ModDirectory { get; set; } = string.Empty;
         private string BattleStartLog { get; } = "battle_start.log";
         private string BattleEndLog { get; } = "battle_end.log";
@@ -94,22 +92,40 @@ namespace WfGaming.Models
                 }
             }
 
-            string versionPath = string.Empty;
             string[] versionDirectories = Directory.GetDirectories(buildPath + @"\res_mods");
             foreach (var versionDirectory in versionDirectories)
             {
                 Console.WriteLine($"Version: {versionDirectory}");
-                versionPath = versionDirectory;
+                ModRootDirectory = versionDirectory;
 
                 Version = versionDirectory.Split('\\').Last();
             }
 
-            ModDirectory = $@"{versionPath}\PnFMods\{ModName}";
+            ModDirectory = $@"{ModRootDirectory}\PnFMods\{ModName}";
 
+            /*
             string logPath = $@"{ModDirectory}\battle_start.txt";
             Console.WriteLine($"Log: {logPath}");
             DateTime datetime = File.GetLastWriteTime(logPath);
             Console.WriteLine($"DateTime: {datetime}");
+            */
+        }
+
+        public void InstallMod(string modScriptPath)
+        {
+            File.Create($@"{ModRootDirectory}\PnFModsLoader.py");
+
+            string pnfMods = $@"{ModRootDirectory}\PnFMods";
+            if (!Directory.Exists(pnfMods))
+            {
+                Directory.CreateDirectory(pnfMods);
+            }
+
+            ModDirectory = $@"{pnfMods}\{ModName}";
+
+            string targetModPath = $@"{ModDirectory}\Main.py";
+
+            File.Copy(modScriptPath, targetModPath, overwrite: true);
         }
     }
 }

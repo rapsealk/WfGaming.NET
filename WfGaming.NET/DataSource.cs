@@ -16,6 +16,11 @@ namespace WfGaming
     {
         private Game game;
 
+        public Player Player { get; set; }
+        public Player Enemy { get; set; }
+
+        public Mouse Mouse { get; set; }
+
         private FileSystemWatcher watcher;
 
         private List<string> HandlingFiles = new List<string>();
@@ -23,6 +28,14 @@ namespace WfGaming
         public DataSource(Game game)
         {
             this.game = game;
+
+            Reset();
+        }
+
+        public void Reset()
+        {
+            this.Player = new Player();
+            this.Enemy = new Player();
         }
 
         [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
@@ -60,10 +73,11 @@ namespace WfGaming
                     }
                     catch (System.Threading.ThreadInterruptedException e)
                     {
-                        watcher.EnableRaisingEvents = false;
+                        Console.WriteLine("DataSource.Run: ThreadInterruptedException");
                         break;
                     }
                 }
+                watcher.EnableRaisingEvents = false;
             }
         }
 
@@ -72,85 +86,123 @@ namespace WfGaming
         {
             if (HandlingFiles.Contains(e.FullPath)) { return; }
 
-            Console.WriteLine($"[{DateTime.Now}] DataSource.OnChanged: {e.Name} {e.ChangeType}");
-            Console.WriteLine($"[{DateTime.Now}] HandlingFiles.Count: {HandlingFiles.Count}");
             // Specify what is done when a file is changed, created, or deleted.
-            if (e.Name.StartsWith("enemy"))
+            if (e.Name.StartsWith("player"))
             {
-                HandleEnemy(e.FullPath);
+                HandlePlayer(e.FullPath);
+            }
+            else if (e.Name.StartsWith("enemy"))
+            {
+                HandlePlayer(e.FullPath, true);
+            }
+            else if (e.Name.StartsWith("mouse"))
+            {
+                HandleMouse(e.FullPath);
             }
         }
 
-        private void HandleEnemy(string path)
+        private void HandlePlayer(string path, bool isEnemy = false)
         {
             HandlingFiles.Add(path);
-            Console.WriteLine($"HandleEnemy: {path}");
+
             try
             {
-                /*
-                //List<byte> buffer = new List<byte>();
-                byte[] buffer = new byte[1024];
-                int i = 0;
-                using (var stream = File.OpenRead(path))
-                {
-                    //while (true)
-                    for (i = 0; i < buffer.Length; i++)
-                    {
-                        int bite = stream.ReadByte();
-                        if (bite == -1)
-                        {
-                            //buffer[i] = 0;
-                            break;
-                        }
-                        //buffer.Append((byte)bite);
-                        //Console.WriteLine($"Bite: {bite} / {buffer.Count}");
-                        buffer[i] = (byte)bite;
-                    }
-                    stream.Close();
-                }
-
-                string data = Encoding.Default.GetString(buffer, 0, i);
-                */
-
-                //Console.WriteLine($"buffer.Count: {buffer.Count}");
-
                 byte[] buffer = new byte[1024];
                 int i = 0;
                 using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    //while (true)
                     for (i = 0; i < buffer.Length; i++)
                     {
                         int bite = stream.ReadByte();
                         if (bite == -1)
                         {
-                            //buffer[i] = 0;
                             break;
                         }
-                        //buffer.Append((byte)bite);
-                        //Console.WriteLine($"Bite: {bite} / {buffer.Count}");
                         buffer[i] = (byte)bite;
                     }
                 }
 
                 string data = Encoding.Default.GetString(buffer, 0, i);
 
-                //string data = System.IO.File.ReadAllText(path);
-                Console.WriteLine($"buffer.ToString(): {data}");
-                //buffer.Clear();
-                Enemy enemy = JsonSerializer.Deserialize<Enemy>(data);
-                Console.WriteLine($"Enemy: {enemy.id}, {enemy.health} / {enemy.max_health}, {enemy.yaw}");
+                try
+                {
+                    if (isEnemy)
+                    {
+                        Enemy = JsonSerializer.Deserialize<Player>(data);
+                        Console.WriteLine($"[{DateTime.Now}] Enemy: {Enemy.Health}");
+                    }
+                    else
+                    {
+                        Player = JsonSerializer.Deserialize<Player>(data);
+                        Console.WriteLine($"[{DateTime.Now}] Player: {Player.Health}");
+                    }
+                }
+                catch (System.Text.Json.JsonException e)
+                {
+
+                }
             }
             catch (Exception exception)
             {
-                Console.Error.WriteLine(exception.Message);
+                //Console.Error.WriteLine(exception.Message);
             }
             finally
             {
                 HandlingFiles.Remove(path);
             }
+        }
 
-            //File.Delete(path);
+        private void HandleMouse(string path)
+        {
+            try
+            {
+                byte[] buffer = new byte[128];
+                int i = 0;
+                using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                    for (i = 0; i < buffer.Length; i++)
+                    {
+                        int bite = stream.ReadByte();
+                        if (bite == -1)
+                        {
+                            break;
+                        }
+                        buffer[i] = (byte)bite;
+                    }
+                }
+
+                string data = Encoding.Default.GetString(buffer, 0, i);
+
+                try
+                {
+                    Mouse = JsonSerializer.Deserialize<Mouse>(data);
+                }
+                catch (System.Text.Json.JsonException e)
+                {
+
+                }
+                Console.WriteLine($"[{DateTime.Now}] Mouse: {Mouse.X},{Mouse.Y}");
+            }
+            catch (Exception exception)
+            {
+                
+            }
+            finally
+            {
+
+            }
+        }
+
+        public string GetPlayerCSV()
+        {
+            Player p = this.Player;
+            return $"{p.Health},{p.MaxHealth},{p.Yaw},{p.Speed},{Convert.ToUInt16(p.IsVisible)},{Convert.ToUInt16(p.IsShipVisible)}";
+        }
+
+        public string GetEnemyCSV()
+        {
+            Player e = this.Enemy;
+            return $"{e.Health},{e.MaxHealth},{e.Yaw},{e.Speed},{Convert.ToUInt16(e.IsVisible)},{Convert.ToUInt16(e.IsShipVisible)}";
         }
     }
 }

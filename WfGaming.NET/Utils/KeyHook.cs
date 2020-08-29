@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace WfGaming.Utils
 {
@@ -29,13 +25,11 @@ namespace WfGaming.Utils
         private const int WH_KEYBOARD_LL = 13;
         private const int WM_KEYDOWN = 0x100;
 
-        private static LowLevelKeyProc keyboardProc = KeyboardHookProc;
+        private LowLevelKeyProc keyboardProc;
 
-        private static IntPtr keyHook = IntPtr.Zero;
+        private IntPtr keyHook = IntPtr.Zero;
 
-        private static Queue<char> texts = new Queue<char>();
-
-        public static void InstallHook()
+        public void InstallHook()
         {
             if (keyHook == IntPtr.Zero)
             {
@@ -49,35 +43,94 @@ namespace WfGaming.Utils
             }
         }
 
-        public static void UninstallHook()
+        public void UninstallHook()
         {
             UnhookWindowsHookEx(keyHook);
         }
 
-        private static IntPtr KeyboardHookProc(int nCode, IntPtr wParam, IntPtr lParam)
+        private IntPtr KeyboardHookProc(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0 && (int)wParam == WM_KEYDOWN)
             {
-                texts.Enqueue(Convert.ToChar(Marshal.ReadInt32(lParam)));
+                queue.Enqueue(Convert.ToChar(Marshal.ReadInt32(lParam)));
                 //return (IntPtr)1; // Ignore keyboard input
             }
             return CallNextHookEx(keyHook, nCode, (int)wParam, lParam);
         }
 
-        string ttmp = string.Empty;
+        private ConcurrentQueue<char> queue = new ConcurrentQueue<char>();
+
+        private char _forwardKey;
+        private char _turnKey;
+        private char _fireKey;
+
+        public char ForwardKey
+        {
+            get
+            {
+                char value = _forwardKey;
+                _forwardKey = char.MinValue;
+                return value;
+            }
+        }
+
+        public char TurnKey
+        {
+            get
+            {
+                char value = _turnKey;
+                _turnKey = char.MinValue;
+                return value;
+            }
+        }
+
+        public char FireKey
+        {
+            get
+            {
+                char value = _turnKey;
+                _turnKey = char.MinValue;
+                return value;
+            }
+        }
+
+        public KeyHook()
+        {
+            this.keyboardProc = KeyboardHookProc;
+        }
 
         public void DigestQueue()
         {
             while (true)
             {
-                Thread.Sleep(100);
-                if (texts.Count > 0)
+                try
                 {
-                    char character = texts.Dequeue();
-                    ttmp += character;
-                    Console.WriteLine($"Text: {ttmp}");
+                    char key = char.MinValue;
+                    if (queue.TryDequeue(out key))
+                    {
+                        Console.WriteLine($"DigestQueue: [{key}/{(int)key}]");
+                        if (key == 'W' || key == 'S')
+                        {
+                            _forwardKey = key;
+                        }
+                        else if (key == 'Q' || key == 'E')
+                        {
+                            _turnKey = key;
+                        }
+                        else if (key == ' ')
+                        {
+                            _fireKey = key;
+                        }
+                        Console.WriteLine($"- Forward: [{_forwardKey}], Turn: [{_turnKey}], Fire: [{_fireKey}]");
+                    }
+                }
+                catch (System.Threading.ThreadInterruptedException e)
+                {
+                    Console.WriteLine("KeyHook.ThreadInterruptedException");
+                    break;
                 }
             }
+            Console.WriteLine("KeyHook.DigestQueue.Termintaed");
         }
     }
 }
