@@ -17,5 +17,7 @@ namespace WfGaming.Models
         public double Speed { get; set; }
         public bool IsVisible { get; set; }
         public bool IsShipVisible { get; set; }
+        public bool IsVehicleBurning { get; set; }
+        public bool IsVehicleFlooding { get; set; }
     }
 }

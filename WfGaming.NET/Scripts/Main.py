@@ -36,11 +36,14 @@ class PlayerInfo:
     def __str__(self):
         args = (self.id, self.team_id, self.ship_id,
                 self.health, self.health_max, self.yaw, self.speed,
-                str(self.is_visible).lower(), str(self.is_ship_visible).lower())
+                str(self.is_visible).lower(), str(self.is_ship_visible).lower(),    # noqa: E501
+                str(battle.isVehicleBurning(self.ship_id)).lower(),                 # noqa: F821, E501
+                str(battle.isVehicleFlooding(self.ship_id)).lower())                # noqa: F821, E501
         return '''{"Id": %d, "TeamId": %d, "ShipId": %s,
                    "Health": %f, "MaxHealth": %d,
                    "Yaw": %f, "Speed": %f,
-                   "IsVisible": %s, "IsShipVisible": %s}''' % args
+                   "IsVisible": %s, "IsShipVisible": %s,
+                   "IsVehicleBurning": %s, "IsVehicleFlooding": %s}''' % args
 
     def assign(self, info):
         self.__dict__ = info.__dict__
