@@ -89,7 +89,7 @@ namespace WfGaming.Utils
             get
             {
                 char value = _fireKey;
-                _turnKey = char.MinValue;
+                _fireKey = char.MinValue;
                 return value;
             }
         }
