@@ -12,7 +12,7 @@
     - 함선: II Chester (`U.S.A`, `Cruiser`)
 
 ## 설정
-* Windows Forms 클라이언트를 [다운로드](https://github.com/rapsealk/WfGaming.NET/releases/tag/v0.1.0) 받습니다.
+* Windows Forms 클라이언트를 [다운로드](https://github.com/rapsealk/WfGaming.NET/releases/tag/v0.1.0-alpha) 받습니다.
 * 설치한 `Release.zip`을 압축 해제 후 `WfGaming.NET.exe`를 실행합니다.
 * `모드 선택`에서 같은 폴더 안의 `Main.py`을 선택한 후 `설치` 버튼을 클릭합니다.
 * `설치 완료` 메시지가 나타나면 게임을 실행한 후 `실행` 버튼을 클릭합니다.
