@@ -102,7 +102,7 @@ namespace WfGaming
                     {
                         Thread.Sleep(1000);
                     }
-                    catch (System.Threading.ThreadInterruptedException e)
+                    catch (System.Threading.ThreadInterruptedException)
                     {
                         goto Endpoint;
                     }
@@ -118,7 +118,7 @@ namespace WfGaming
                     {
                         Thread.Sleep(1000);
                     }
-                    catch (System.Threading.ThreadInterruptedException e)
+                    catch (System.Threading.ThreadInterruptedException)
                     {
                         goto Endpoint;
                     }
@@ -135,7 +135,7 @@ namespace WfGaming
                     System.IO.Directory.CreateDirectory(path);
                 }
 
-                string dirName = path = $@"{path}\{battleId}";
+                string dirName = $@"{path}\{battleId}";
                 if (!System.IO.Directory.Exists(dirName))
                 {
                     System.IO.Directory.CreateDirectory(dirName);
@@ -206,7 +206,7 @@ namespace WfGaming
 
                     try
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(200);
                     }
                     catch (System.Threading.ThreadInterruptedException e)
                     {
