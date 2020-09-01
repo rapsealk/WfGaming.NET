@@ -58,11 +58,15 @@ namespace WfGaming.Utils
             return CallNextHookEx(keyHook, nCode, (int)wParam, lParam);
         }
 
-        private ConcurrentQueue<char> queue = new ConcurrentQueue<char>();
+        private readonly ConcurrentQueue<char> queue = new ConcurrentQueue<char>();
 
         private char _forwardKey;
         private char _turnKey;
         private char _fireKey;
+        private bool _zoomKey;
+        private char _repairKey;
+
+        public bool IsZooming { get; set; }
 
         public char ForwardKey
         {
@@ -94,9 +98,40 @@ namespace WfGaming.Utils
             }
         }
 
+        public bool ZoomKey
+        {
+            get
+            {
+                bool value = _zoomKey;
+                _zoomKey = false;
+                return value;
+            }
+        }
+
+        public char RepairKey
+        {
+            get
+            {
+                char value = _repairKey;
+                _repairKey = char.MinValue;
+                return value;
+            }
+        }
+
         public KeyHook()
         {
             this.keyboardProc = KeyboardHookProc;
+        }
+
+        public void Reset()
+        {
+            _forwardKey = char.MinValue;
+            _turnKey = char.MinValue;
+            _fireKey = char.MinValue;
+            _zoomKey = false;
+            _repairKey = char.MinValue;
+
+            IsZooming = false;
         }
 
         public void DigestQueue()
@@ -121,7 +156,16 @@ namespace WfGaming.Utils
                         {
                             _fireKey = key;
                         }
-                        Console.WriteLine($"- Forward: [{_forwardKey}], Turn: [{_turnKey}], Fire: [{_fireKey}]");
+                        else if (key == 160)
+                        {
+                            _zoomKey = true;
+                            IsZooming ^= true;
+                        }
+                        else if (key == 'R')
+                        {
+                            _repairKey = key;
+                        }
+                        Console.WriteLine($"- Forward: [{_forwardKey}], Turn: [{_turnKey}], Fire: [{_fireKey}], Repair: [{_repairKey}]");
                     }
                 }
                 catch (System.Threading.ThreadInterruptedException e)
