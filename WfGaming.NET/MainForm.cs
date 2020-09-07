@@ -56,7 +56,7 @@ namespace WfGaming
             game = new Game();
             Console.WriteLine($"Build: {game.Build}, Version: {game.Version}");
 
-            BuildLabel.Text = game.Build.ToString();
+            BuildLabel.Text = game.Build;
             VersionLabel.Text = game.Version;
 
             dataSource = new DataSource(game);
