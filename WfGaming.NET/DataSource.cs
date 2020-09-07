@@ -23,7 +23,16 @@ namespace WfGaming
 
         private FileSystemWatcher watcher;
 
-        private List<string> HandlingFiles = new List<string>();
+        private readonly List<string> HandlingFiles = new List<string>();
+
+        public static readonly string[] Headers = {
+            "image", "health", "max_health", "yaw", "speed",
+            "visible", "ship_visible", "burning", "flooding",
+            "health2", "max_health2", "yaw2", "speed2",
+            "visible2", "ship_visible2", "burning2", "flooding2",
+            "forwarding", "turning", "firing", "zooming", "repairing", "x", "y",
+            "\n"
+        };
 
         public DataSource(Game game)
         {
@@ -196,13 +205,23 @@ namespace WfGaming
         public string GetPlayerCSV()
         {
             Player p = this.Player;
-            return $"{p.Health},{p.MaxHealth},{p.Yaw},{p.Speed},{Convert.ToUInt16(p.IsVisible)},{Convert.ToUInt16(p.IsShipVisible)}";
+            string[] args = {
+                p.Health.ToString(), p.MaxHealth.ToString(), p.Yaw.ToString(), p.Speed.ToString(),
+                Convert.ToUInt16(p.IsVisible).ToString(), Convert.ToUInt16(p.IsShipVisible).ToString(),
+                Convert.ToUInt16(p.IsVehicleBurning).ToString(), Convert.ToUInt16(p.IsVehicleFlooding).ToString()
+            };
+            return string.Join(",", args);
         }
 
         public string GetEnemyCSV()
         {
             Player e = this.Enemy;
-            return $"{e.Health},{e.MaxHealth},{e.Yaw},{e.Speed},{Convert.ToUInt16(e.IsVisible)},{Convert.ToUInt16(e.IsShipVisible)}";
+            string[] args = {
+                e.Health.ToString(), e.MaxHealth.ToString(), e.Yaw.ToString(), e.Speed.ToString(),
+                Convert.ToUInt16(e.IsVisible).ToString(), Convert.ToUInt16(e.IsShipVisible).ToString(),
+                Convert.ToUInt16(e.IsVehicleBurning).ToString(), Convert.ToUInt16(e.IsVehicleFlooding).ToString()
+            };
+            return string.Join(",", args);
         }
     }
 }

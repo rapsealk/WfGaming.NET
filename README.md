@@ -7,9 +7,12 @@
 * 필요한 소프트웨어를 설치한다.
     - World of Warships (NA) ([LINK](https://na.wargaming.net/en/games/wows))
 * 게임 클라이언트
-    - 해상도: 1920x1080 or 1280x720
+    - 해상도: 1920x1080
     - 전체화면
     - 함선: II Chester (`U.S.A`, `Cruiser`)
+    - 우측 하단 미니맵의 크기는 기본 값으로 설정해 주세요. (240x240)
+    - 시각 모드는 설정 해제 후 실행합니다.
+* [아이디 목록](https://docs.google.com/spreadsheets/d/1DP3d6C__8ejXVWUF--6t3VH1CNEpS7dxr0p9Ndcu1nE/edit?usp=sharing)에서 아직 할당되지 않은 계정을 이용해 주세요.
 
 ## 설정
 * Windows Forms 클라이언트를 [다운로드](https://github.com/rapsealk/WfGaming.NET/releases/tag/latest) 받습니다.
@@ -55,7 +58,9 @@
 | -------- |:--------:|
 | 속도 조절 | `w`, `s` |
 |   회전   | `q`, `e` |
+|   수리   |    `r`   |
 |   조준   | `Mouse`  |
+|   확대   | `LShift` |
 |   발포   | `Space`  |
 
 ![In-Game](https://github.com/0x0184/wows/blob/feat/log/resources/08.png)

@@ -6,7 +6,7 @@ namespace WfGaming.Models
 {
     class Game
     {
-        public uint Build { get; private set; }
+        public string Build { get; private set; }
         public string Version { get; private set; }
 
         DateTime LastBattleStartTime = DateTime.Now;
@@ -84,7 +84,7 @@ namespace WfGaming.Models
 
                 try
                 {
-                    Build = uint.Parse(buildDirectory.Split('\\').Last());
+                    Build = buildDirectory.Split('\\').Last();
                 }
                 catch (FormatException e)
                 {
@@ -92,6 +92,18 @@ namespace WfGaming.Models
                 }
             }
 
+            if (Build.StartsWith("27"))
+            {
+                ProcessBuild27(buildPath);
+            }
+            else if (Build.StartsWith("28"))
+            {
+                ProcessBuild28(buildPath);
+            }
+        }
+
+        private void ProcessBuild27(string buildPath)
+        {
             string[] versionDirectories = Directory.GetDirectories(buildPath + @"\res_mods");
             foreach (var versionDirectory in versionDirectories)
             {
@@ -102,13 +114,12 @@ namespace WfGaming.Models
             }
 
             ModDirectory = $@"{ModRootDirectory}\PnFMods\{ModName}";
+        }
 
-            /*
-            string logPath = $@"{ModDirectory}\battle_start.txt";
-            Console.WriteLine($"Log: {logPath}");
-            DateTime datetime = File.GetLastWriteTime(logPath);
-            Console.WriteLine($"DateTime: {datetime}");
-            */
+        private void ProcessBuild28(string buildPath)
+        {
+            ModRootDirectory = $@"{buildPath}\res_mods";
+            ModDirectory = $@"{ModRootDirectory}\PnFMods\{ModName}";
         }
 
         public void InstallMod(string modScriptPath)
@@ -122,6 +133,10 @@ namespace WfGaming.Models
             }
 
             ModDirectory = $@"{pnfMods}\{ModName}";
+            if (!Directory.Exists(ModDirectory))
+            {
+                Directory.CreateDirectory(ModDirectory);
+            }
 
             string targetModPath = $@"{ModDirectory}\Main.py";
 

@@ -9,7 +9,7 @@ namespace WfGaming.Utils
         public static long GetTimestamp()
         {
             TimeSpan timestamp = DateTime.Now - Origin;
-            return (long)timestamp.TotalSeconds;
+            return (long)(timestamp.TotalMilliseconds * 1000);
         }
     }
 }

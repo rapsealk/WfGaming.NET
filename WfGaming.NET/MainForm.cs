@@ -56,7 +56,7 @@ namespace WfGaming
             game = new Game();
             Console.WriteLine($"Build: {game.Build}, Version: {game.Version}");
 
-            BuildLabel.Text = game.Build.ToString();
+            BuildLabel.Text = game.Build;
             VersionLabel.Text = game.Version;
 
             dataSource = new DataSource(game);
@@ -102,7 +102,7 @@ namespace WfGaming
                     {
                         Thread.Sleep(1000);
                     }
-                    catch (System.Threading.ThreadInterruptedException e)
+                    catch (System.Threading.ThreadInterruptedException)
                     {
                         goto Endpoint;
                     }
@@ -112,13 +112,16 @@ namespace WfGaming
                 Console.WriteLine($"[{DateTime.Now}] -*- Battle started! -*-");
                 Console.WriteLine("-----------------------------------------");
 
+                dataSource.Reset();
+                keyHook.Reset();
+
                 while (!dataSource.Enemy.IsVisible)
                 {
                     try
                     {
                         Thread.Sleep(1000);
                     }
-                    catch (System.Threading.ThreadInterruptedException e)
+                    catch (System.Threading.ThreadInterruptedException)
                     {
                         goto Endpoint;
                     }
@@ -135,24 +138,15 @@ namespace WfGaming
                     System.IO.Directory.CreateDirectory(path);
                 }
 
-                string dirName = path = $@"{path}\{battleId}";
+                string dirName = $@"{path}\{battleId}";
                 if (!System.IO.Directory.Exists(dirName))
                 {
                     System.IO.Directory.CreateDirectory(dirName);
                 }
 
-                string[] headers = {
-                    "image", "health", "max_health", "yaw", "speed",
-                    "visible", "ship_visible",
-                    "health2", "max_health2", "yaw2", "speed2",
-                    "visible2", "ship_visible2",
-                    "forwarding", "turning", "firing", "x", "y",
-                    "\n"
-                };
-
                 path = $@"{dirName}\meta.csv";
 
-                System.IO.File.WriteAllText(path, string.Join(",", headers));
+                System.IO.File.WriteAllText(path, string.Join(",", DataSource.Headers));
 
                 while (!game.IsBattleEnded)
                 {
@@ -166,9 +160,13 @@ namespace WfGaming
                     int forwarding = 0;
                     int turning = 0;
                     int firing = 0;
+                    int zooming = 0;
+                    int repairing = 0;
                     char forwardingKey = keyHook.ForwardKey;
                     char turningKey = keyHook.TurnKey;
                     char firingKey = keyHook.FireKey;
+                    bool zoomKey = keyHook.ZoomKey;
+                    char repairKey = keyHook.RepairKey;
 
                     if (forwardingKey == 'S')
                     {
@@ -193,9 +191,19 @@ namespace WfGaming
                         firing = 1;
                     }
 
+                    if (zoomKey)     // LShift
+                    {
+                        zooming = 1;
+                    }
+
+                    if (repairKey == 'R')
+                    {
+                        repairing = 1;
+                    }
+
                     Mouse mouse = dataSource.Mouse;
 
-                    string actions = $"{forwarding},{turning},{firing},{mouse.X},{mouse.Y}";
+                    string actions = $"{forwarding},{turning},{firing},{zooming},{repairing},{mouse.X},{mouse.Y}";
 
                     string data = $"{timestamp}.jpg,{playerCSV},{enemyCSV},{actions}";
 
@@ -206,7 +214,7 @@ namespace WfGaming
 
                     try
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(200);
                     }
                     catch (System.Threading.ThreadInterruptedException e)
                     {
@@ -217,8 +225,6 @@ namespace WfGaming
                 Console.WriteLine("-----------------------------------------");
                 Console.WriteLine($"[{DateTime.Now}] -*- Battle's ended! -*-");
                 Console.WriteLine("-----------------------------------------");
-
-                dataSource.Reset();
             }
             
         Endpoint:
